@@ -1,0 +1,3 @@
+[submodule "99_Sdk_AssemblyInfoGeneration/AssemblyInfoGenerationSdk"]
+	path = 99_Sdk_AssemblyInfoGeneration/AssemblyInfoGenerationSdk
+	url = https://github.com/dasMulli/AssemblyInfoGenerationSdk.git

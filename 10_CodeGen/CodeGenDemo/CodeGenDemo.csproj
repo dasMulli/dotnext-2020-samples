@@ -1,0 +1,97 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <VarsFile Include="vars.ini" />
+
+    <!-- 
+    This tells VS to run this target on file changes so
+    Intellisense shows changes to the .ini file instantly
+     -->
+    <None Update="@(VarsFile)" Generator="MSBuild:GenerateVarsFileCode" />
+    
+    <!-- Make sure that VS builds the project whenever the input file is changed -->
+    <UptoDateCheckInput Include="@(VarsFile)" />
+  </ItemGroup>
+
+  <Target Name="DetermineGeneratedVarsFileOutputPath">
+    <PropertyGroup>
+      <!--
+      Here we "calculate" the name of the generated file.
+      It's good to do this in a target so that $(IntermediateOutputPath) is guaranteed to have its final value.
+      -->
+      <VarsCodeFile>$(IntermediateOutputPath)$(MSBuildProjectName).vars.cs</VarsCodeFile>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="GenerateVarsFileCode"
+          BeforeTargets="CoreCompile"
+          DependsOnTargets="DetermineGeneratedVarsFileOutputPath"
+          Inputs="@(VarsFile)" Outputs="$(VarsCodeFile)">
+    
+    <!--
+    Read the .ini file
+    -->
+    <ReadLinesFromFile File="@(VarsFile)">
+      <Output TaskParameter="Lines" ItemName="VarsFileLine" />
+    </ReadLinesFromFile>
+
+    <!--
+    Filter out lines that are comments or don't contain an "=" character.
+    (yeah, not really fool-proof)
+    -->
+    <ItemGroup>
+      <VarsFileLineToRemove Include="@(VarsFileLine)"
+                            Condition="$([System.String]::Copy('%(VarsFileLine.Identity)').StartsWith(';'))
+                             or !($([System.String]::Copy('%(VarsFileLine.Identity)').Contains('=')))" />
+      <VarsFileLine Remove="@(VarsFileLineToRemove)" />
+    </ItemGroup>
+
+    <!--
+    Split by "=" sign: Create VariableName and Value metadata on the filtered lines
+    -->
+    <ItemGroup>
+      <VarsFileLine
+        VariableName="$([System.String]::Copy('%(VarsFileLine.Identity)').Split('=')[0])"
+        Value="$([System.String]::Copy('%(VarsFileLine.Identity)').Split('=')[1])"
+       />
+    </ItemGroup>
+
+    <!--
+    Inline C# code generation
+    -->
+    <ItemGroup>
+      <VarsCodeFileContent Include="// &lt;auto-generated&gt; This file has been auto generated. &lt;/auto-generated&gt; " />
+      <VarsCodeFileContent Include="namespace $(RootNamespace) {" />
+      <VarsCodeFileContent Include="  internal static class BuildVariables {" />
+      <VarsCodeFileContent Include="    public const string %(VarsFileLine.VariableName) = &quot;%(VarsFileLine.Value)&quot;%3B"
+            Condition="'@(VarsFileLine)' != ''" />
+      <VarsCodeFileContent Include="  }" />
+      <VarsCodeFileContent Include="}" />
+    </ItemGroup>
+
+    <!--
+    Write out the generated C# lines to the file inside obj\
+    -->
+    <WriteLinesToFile Lines="@(VarsCodeFileContent)" File="$(VarsCodeFile)" Overwrite="true" Encoding="Unicode" />
+
+    <ItemGroup>
+      <!--
+      Add the file as compile input.
+      -->
+      <Compile Include="$(VarsCodeFile)" />
+      <!--
+      Record the build-time file write into @(FileWrites) so that
+      the "Clean" target will delete it on "Clean Project" / Rebuild.
+      -->
+      <FileWrites Include="$(VarsCodeFile)" />
+    </ItemGroup>
+
+  </Target>
+
+</Project>
+
