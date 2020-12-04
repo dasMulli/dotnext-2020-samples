@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'
                             and '$(RuntimeIdentifier)' != ''
-                            and ('$(OutputType)' == 'Exe' or '$(OutputType)' == 'WinExe')">
+                            and '$(HasRuntimeOutput)' == 'True'">
     <PublishSingleFile>True</PublishSingleFile>
     <SelfContained>False</SelfContained>
     <PublishReadyToRun>True</PublishReadyToRun>

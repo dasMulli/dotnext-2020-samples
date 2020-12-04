@@ -6,4 +6,5 @@
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">True</TreatWarningsAsErrors>
   </PropertyGroup>
   <!-- All NuGet properties: https://docs.microsoft.com/en-us/dotnet/core/tools/csproj#nuget-metadata-properties -->
+  <!-- All properties by .NET SDKs: https://docs.microsoft.com/en-us/dotnet/core/project-sdk/overview -->
 </Project>
