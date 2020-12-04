@@ -9,6 +9,6 @@
     <None Update="*.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <Import Project="PublishOptions-03.props" />
+  <Import Project="PublishOptions-01.props" />
 
 </Project>
